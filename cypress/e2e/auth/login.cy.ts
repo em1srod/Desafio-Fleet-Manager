@@ -127,8 +127,9 @@ describe('Login - Rota protegida sem sessão', () => {
   });
 
   // @rf-lgn-203 @bug BUG-LOG-203
+  // Este cenário é coberto por CT-012 (sessao.cy.ts) para evitar duplicidade.
   // https://github.com/em1srod/Desafio-Fleet-Manager/issues/1
-  it('LGN-202: ao acessar /dashboard sem sessão, deve redirecionar para /login', () => {
+  it.skip('LGN-202: ao acessar /dashboard sem sessão, deve redirecionar para /login', () => {
     cy.visit('/dashboard', { failOnStatusCode: false });
 
     // Oráculo único: terminar em /login (com timeout para o redirecionamento acontecer)
