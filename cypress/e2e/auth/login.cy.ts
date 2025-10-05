@@ -126,6 +126,8 @@ describe('Login - Rota protegida sem sessão', () => {
     cy.window().then((win) => win.sessionStorage.clear());
   });
 
+  // @rf-lgn-203 @bug BUG-LOG-203
+  // https://github.com/em1srod/Desafio-Fleet-Manager/issues/1
   it('LGN-202: ao acessar /dashboard sem sessão, deve redirecionar para /login', () => {
     cy.visit('/dashboard', { failOnStatusCode: false });
 
@@ -133,7 +135,8 @@ describe('Login - Rota protegida sem sessão', () => {
     cy.location('pathname', { timeout: 6000 }).should('eq', '/login');
   });
 
-// @rf-lgn-203 @bug BUG-LOG-203 (enquanto não redireciona)
+// @rf-lgn-203 @bug BUG-LOG-203
+// https://github.com/em1srod/Desafio-Fleet-Manager/issues/2
 it('LGN-203: ao sair, deve redirecionar para /login e limpar storage', () => {
   // 1) loga
   login.fazerLogin('admin@teste.com', '123456'); // garante que chegou ao /dashboard
