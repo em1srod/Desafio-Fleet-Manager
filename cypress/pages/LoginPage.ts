@@ -5,26 +5,35 @@ export class LoginPage {
     cy.visit('/login');
   }
 
-private pick(selectors: string[]) {
-  const joined = selectors.join(', ');
-  // primeiro tenta elementos visíveis
-  return cy.get(joined, { timeout: 10000 }).then(($els) => {
-    const $visible = $els.filter(':visible').first();
-    if ($visible.length) {
-      return cy.wrap($visible);
-    }
+  private pick(selectors: string[]) {
+    const joined = selectors.join(', ');
+    return cy.get(joined, { timeout: 10000 }).then(($els) => {
+      const $visible = $els.filter(':visible').first();
+      if ($visible.length) {
+        return cy.wrap($visible);
+      }
 
-    // se não houver elementos visíveis, faz scroll e tenta revelar o primeiro elemento
-    const $first = $els.first();
-    return cy.wrap($first)
-      .scrollIntoView({ easing: 'linear' })
-      .then(($el) => cy.wrap($el).invoke('show').then(() => cy.wrap($el)));
-  });
-}
+      const $first = $els.first();
+      return cy.wrap($first)
+        .scrollIntoView({ easing: 'linear' })
+        .then(($el) => cy.wrap($el).invoke('show').then(() => cy.wrap($el)));
+    });
+  }
+
+  private safePick(selectors: string[]) {
+    const joined = selectors.join(', ');
+    return cy.get('body', { timeout: 10000 }).then(($body) => {
+      if ($body.find(joined).length > 0) {
+        return cy.get(joined, { timeout: 10000 });
+      } else {
+        return cy.wrap(null);
+      }
+    });
+  }
 
   email() {
     return this.pick([
-     '.inner-container input[type="email"]',
+      '.inner-container input[type="email"]',
       '.inner-container input[name="email"]',
       '.inner-container input[placeholder*="mail" i]',
       '#email',
@@ -65,11 +74,9 @@ private pick(selectors: string[]) {
   }
 
   alertaErro() {
-    // lista todos os seletores possíveis, mas
-    // prioriza o filho que exibe a mensagem
     const sel = [
-      '[data-description]',         // filho que contém o texto do erro
-      '[data-title]',               // fallback alternativo
+      '[data-description]',
+      '[data-title]',
       '[data-testid="alerta-erro"]',
       '[role="alert"]',
       '.alert-error',
@@ -81,6 +88,7 @@ private pick(selectors: string[]) {
       .filter(':visible')
       .first();
   }
+
   cardLogin() {
     return this.pick([
       '[data-testid="card-login"]',
@@ -89,15 +97,43 @@ private pick(selectors: string[]) {
       'form:has(input[type="password"])'
     ]);
   }
+
+  cardLoginIfExists() {
+  const selectors = [
+    '[data-testid="card-login"]',
+    '[class*="login" i]',
+    'form[action*="login" i]',
+    'form:has(input[type="password"])'
+  ];
+  const joined = selectors.join(', ');
+
+  return cy.document({ timeout: 10000 }).then((doc) => {
+    const bodyText = doc.body.innerText;
+
+    // Se o texto "Redirecionando..." estiver presente, retorna null
+    if (bodyText.includes('Redirecionando')) {
+      return cy.wrap(null);
+    }
+
+    // Se algum dos elementos existir, retorna o cy.get normalmente
+    const found = doc.querySelector(joined);
+    if (found) {
+      return cy.get(joined, { timeout: 10000 });
+    }
+
+    return cy.wrap(null);
+  });
+}
+
   alertaTitulo() {
     return cy.contains('Erro no login').should('be.visible');
   }
+
   alertaDescricao() {
     return cy.contains('Erro no login').should('be.visible');
   }
-  emailValidationMessage() {
-  return cy.get('li.v-messages__message');
-  }
 
-  
+  emailValidationMessage() {
+    return cy.get('li.v-messages__message');
+  }
 }

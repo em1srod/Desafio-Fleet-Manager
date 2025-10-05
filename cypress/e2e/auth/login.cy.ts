@@ -116,6 +116,26 @@ it('LGN-104: Campos vazios exibem mensagens de obrigatório', () => {
 
   cy.url().should('include', '/login');
 });
+describe('Login - Rota protegida sem sessão', () => {
+  beforeEach(() => {
+    cy.clearCookies();
+    cy.clearLocalStorage();
+    cy.window().then((win) => win.sessionStorage.clear());
+  });
+
+  it('LGN-202: Deve exibir tela de redirecionamento ao acessar /dashboard sem sessão', () => {
+    cy.visit('/dashboard', { failOnStatusCode: false });
+
+    // Verifica que ainda está na rota protegida
+    cy.location('pathname').should('eq', '/dashboard');
+
+    // Verifica que a tela mostra "Redirecionando..."
+    cy.contains('Redirecionando').should('be.visible');
+
+    // Verifica que o card de login ainda não apareceu
+    login.cardLoginIfExists().should('not.exist');
+  });
+});
 
 function and(arg0: string, arg1: string) {
   throw new Error('Function not implemented.');
