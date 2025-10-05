@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "baseUrl": "https://qe-test.recrutamento.avantsoft.com.br",        // ← necessário para tsconfig-paths
+    "paths": {
+      "@/*": ["src/*"],    // exemplo de alias, ajuste conforme seu projeto
+      "cypress/*": ["cypress/*"]
+    },
+    "strict": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "src",
+    "cypress"
+  ]
+}
