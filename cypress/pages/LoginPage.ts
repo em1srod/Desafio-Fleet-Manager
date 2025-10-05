@@ -59,18 +59,36 @@ export class LoginPage {
   }
 
   entrar() {
-    const byClick = () => this.pick([
-      '[data-testid="entrar"]',
-      'button#entrar[name="entrar"]',
-      'button[type="submit"]'
-    ]).then(($btn) => cy.wrap($btn).click());
+  const candidates = [
+    '[data-testid="entrar"]',
+    'button#entrar[name="entrar"]',
+    'button[type="submit"]'
+  ].join(', ');
 
-    return cy.window().then(() => {
-      return byClick().then(
-        undefined as never,
-        () => cy.contains('button, [role="button"]', /entrar|login|acessar|sign in/i).click()
-      );
-    });
+  // Decide antes do clique: se há botões candidatos, clica neles; senão usa fallback por texto.
+  return cy.get('body').then(($body) => {
+    const hasCandidates = $body.find(candidates).length > 0;
+
+    if (hasCandidates) {
+      return cy.get(candidates).filter(':visible').first().click();
+    }
+
+    // Fallback seguro (não roda se já tiver botão candidato)
+    return cy.contains('button, [role="button"]', /entrar|login|acessar|sign in/i)
+      .filter(':visible')
+      .first()
+      .click();
+  });
+}
+
+    // Helper para autenticar de ponta a ponta usando os métodos já existentes
+  fazerLogin(email: string, senha: string) {
+    this.open();
+    this.email().type(email);
+    this.senha().type(senha);
+    this.entrar();
+    // sanity: garante que entrou
+    cy.location('pathname').should('eq', '/dashboard');
   }
 
   alertaErro() {

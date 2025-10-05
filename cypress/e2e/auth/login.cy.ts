@@ -1,6 +1,9 @@
 import { LoginPage } from '../../pages/LoginPage';
+import { HeaderPage } from '../../pages/HeaderPage';
+
 
 const login = new LoginPage();
+const header = new HeaderPage();
 
 const CFG = {
   successUrlIncludes: '/dashboard',                       // mude p/ '/home' se for o caso
@@ -123,21 +126,28 @@ describe('Login - Rota protegida sem sessão', () => {
     cy.window().then((win) => win.sessionStorage.clear());
   });
 
-  it('LGN-202: Deve exibir tela de redirecionamento ao acessar /dashboard sem sessão', () => {
+  it('LGN-202: ao acessar /dashboard sem sessão, deve redirecionar para /login', () => {
     cy.visit('/dashboard', { failOnStatusCode: false });
 
-    // Verifica que ainda está na rota protegida
-    cy.location('pathname').should('eq', '/dashboard');
+    // Oráculo único: terminar em /login (com timeout para o redirecionamento acontecer)
+    cy.location('pathname', { timeout: 6000 }).should('eq', '/login');
+  });
 
-    // Verifica que a tela mostra "Redirecionando..."
-    cy.contains('Redirecionando').should('be.visible');
+// @rf-lgn-203 @bug BUG-LOG-203 (enquanto não redireciona)
+it('LGN-203: ao sair, deve redirecionar para /login e limpar storage', () => {
+  // 1) loga
+  login.fazerLogin('admin@teste.com', '123456'); // garante que chegou ao /dashboard
 
-    // Verifica que o card de login ainda não apareceu
-    login.cardLoginIfExists().should('not.exist');
+  // 2) clica em Sair (botão visível no topo direito)
+  header.sair();
+
+  // 3) oráculo único: terminar em /login
+  cy.location('pathname', { timeout: 6000 }).should('eq', '/login');
+
+  // 4) (opcional) storage limpo
+  cy.window().then((w) => {
+    expect(w.localStorage.length, 'localStorage vazio').to.eq(0);
+    expect(w.sessionStorage.length, 'sessionStorage vazio').to.eq(0);
   });
 });
-
-function and(arg0: string, arg1: string) {
-  throw new Error('Function not implemented.');
-}
-
+});

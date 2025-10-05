@@ -1,0 +1,172 @@
+{
+  "stats": {
+    "suites": 1,
+    "tests": 1,
+    "passes": 0,
+    "pending": 0,
+    "failures": 1,
+    "start": "2025-10-05T19:04:30.681Z",
+    "end": "2025-10-05T19:04:39.421Z",
+    "duration": 8740,
+    "testsRegistered": 4,
+    "passPercent": 0,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 3,
+    "hasSkipped": true
+  },
+  "results": [
+    {
+      "uuid": "200fa73f-5b63-40d0-a034-c0782733ba7b",
+      "title": "",
+      "fullFile": "cypress\\e2e\\auth\\aluguel.cy.ts",
+      "file": "cypress\\e2e\\auth\\aluguel.cy.ts",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "25f9271b-bd80-4a50-b118-80d05f63d6f5",
+          "title": "Dashboard - Aluguel e Regras de Status",
+          "fullFile": "",
+          "file": "",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [
+            {
+              "title": "CT-005: Alugar veículo Disponível altera status, KPIs e mostra sucesso",
+              "fullTitle": "Dashboard - Aluguel e Regras de Status CT-005: Alugar veículo Disponível altera status, KPIs e mostra sucesso",
+              "timedOut": null,
+              "duration": 4253,
+              "state": "failed",
+              "speed": null,
+              "pass": false,
+              "fail": true,
+              "pending": false,
+              "context": "[\n  {\n    \"title\": \"cypress-mochawesome-reporter-videos-failed\",\n    \"value\": \"cypress\\\\e2e\\\\auth\\\\aluguel.cy.ts\"\n  },\n  {\n    \"title\": \"cypress-mochawesome-reporter-screenshots\",\n    \"value\": [\n      [\n        \"\\\\aluguel.cy.ts\\\\Dashboard - Aluguel e Regras de Status -- CT-005 Alugar veículo Disponível altera status, KPIs e mostra sucesso (failed).png\"\n      ],\n      [\n        \"\\\\aluguel.cy.ts\\\\Dashboard - Aluguel e Regras de Status -- CT-005 Alugar veículo Disponível altera status, KPIs e mostra sucesso -- before each hook (failed) (attempt 2).png\"\n      ]\n    ]\n  }\n]",
+              "code": "const placa = 'DEF5678'; // placa de um veículo Disponível\ndash.cardStatus(placa).should('contain.text', 'Disponível');\ndash.kpiAlugados().invoke('text').then((beforeStr) => {\n    const before = Number(beforeStr);\n    dash.cardAlugar(placa).click();\n    dash.toastSucesso().should('be.visible');\n    dash.cardStatus(placa).should('contain.text', 'Alugado');\n    dash.kpiAlugados().invoke('text').then((afterStr) => {\n        const after = Number(afterStr);\n        expect(after).to.eq(before + 1);\n    });\n});",
+              "err": {
+                "message": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `#email`, but never found it.\n\nBecause this error occurred during a `before each` hook we are skipping the remaining tests in the current suite: `Dashboard - Aluguel e Regra...`",
+                "estack": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `#email`, but never found it.\n\nBecause this error occurred during a `before each` hook we are skipping the remaining tests in the current suite: `Dashboard - Aluguel e Regra...`\n    at Context.eval (webpack://fleet-manager-e2e/./cypress/support/commands.ts:9:0)",
+                "diff": null
+              },
+              "uuid": "76f153e1-e644-45ba-80d2-dc303f3aaab9",
+              "parentUUID": "25f9271b-bd80-4a50-b118-80d05f63d6f5",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "CT-006: Bloquear aluguel de veículo já Alugado",
+              "fullTitle": "Dashboard - Aluguel e Regras de Status CT-006: Bloquear aluguel de veículo já Alugado",
+              "timedOut": null,
+              "duration": 0,
+              "state": "skipped",
+              "speed": null,
+              "pass": false,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "const placa = 'GHI9012'; // placa de um veículo Alugado\ndash.cardStatus(placa).should('contain.text', 'Alugado');\ndash.cardAlugar(placa).should('be.disabled'); // ou, se o botão existe, garantir que não muda nada\n// tentativa forçada opcional:\n// dash.cardAlugar(placa).click({ force: true });\n// dash.toastErro().should('be.visible');",
+              "err": {},
+              "uuid": "d7d8a67e-afdb-4c8b-8b6d-9df59ec311b7",
+              "parentUUID": "25f9271b-bd80-4a50-b118-80d05f63d6f5",
+              "isHook": false,
+              "skipped": true
+            },
+            {
+              "title": "CT-007: Bloquear aluguel de veículo em Manutenção",
+              "fullTitle": "Dashboard - Aluguel e Regras de Status CT-007: Bloquear aluguel de veículo em Manutenção",
+              "timedOut": null,
+              "duration": 0,
+              "state": "skipped",
+              "speed": null,
+              "pass": false,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "const placa = 'JKL3456'; // placa de um veículo em Manutenção\ndash.cardStatus(placa).should('contain.text', 'Manutenção');\ndash.cardAlugar(placa).should('be.disabled');",
+              "err": {},
+              "uuid": "b9ae05c2-c759-44dc-86ba-91aafc784d63",
+              "parentUUID": "25f9271b-bd80-4a50-b118-80d05f63d6f5",
+              "isHook": false,
+              "skipped": true
+            },
+            {
+              "title": "CT-010: Duplo clique em \"Alugar\" não duplica efeitos",
+              "fullTitle": "Dashboard - Aluguel e Regras de Status CT-010: Duplo clique em \"Alugar\" não duplica efeitos",
+              "timedOut": null,
+              "duration": 0,
+              "state": "skipped",
+              "speed": null,
+              "pass": false,
+              "fail": false,
+              "pending": false,
+              "context": null,
+              "code": "const placa = 'MNO7890'; // veículo Disponível\ndash.cardStatus(placa).should('contain.text', 'Disponível');\n// captura base de alugados\nlet alugadosAntes = 0;\ndash.kpiAlugados().invoke('text').then(t => { alugadosAntes = Number(t); });\n// dispara dois cliques rápidos\ndash.cardAlugar(placa).click().click();\n// deve haver apenas um sucesso efetivo\ndash.cardStatus(placa).should('contain.text', 'Alugado');\ndash.kpiAlugados().invoke('text').then(t => {\n    const alugadosDepois = Number(t);\n    expect(alugadosDepois).to.eq(alugadosAntes + 1);\n});",
+              "err": {},
+              "uuid": "2392f107-4fed-45a7-b4cb-4c13812d0583",
+              "parentUUID": "25f9271b-bd80-4a50-b118-80d05f63d6f5",
+              "isHook": false,
+              "skipped": true
+            }
+          ],
+          "suites": [],
+          "passes": [],
+          "failures": [
+            "76f153e1-e644-45ba-80d2-dc303f3aaab9"
+          ],
+          "pending": [],
+          "skipped": [
+            "d7d8a67e-afdb-4c8b-8b6d-9df59ec311b7",
+            "b9ae05c2-c759-44dc-86ba-91aafc784d63",
+            "2392f107-4fed-45a7-b4cb-4c13812d0583"
+          ],
+          "duration": 4253,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "7.0.1"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": false,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "7.1.4"
+    },
+    "marge": {
+      "options": {
+        "reportDir": "reports\\.jsons",
+        "overwrite": false,
+        "html": false,
+        "json": true,
+        "charts": true,
+        "reportPageTitle": "E2E Login – Cypress",
+        "embeddedScreenshots": true,
+        "inlineAssets": true,
+        "saveAllAttempts": false
+      },
+      "version": "6.3.0"
+    }
+  }
+}
