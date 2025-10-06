@@ -129,6 +129,8 @@ describe('Dashboard - KPIs', () => {
       });
   });
 */
+  // @rf-v-010 @bug BUG-CT-011
+  //https://github.com/em1srod/Desafio-Fleet-Manager/issues/5
   it('CT-011: KPI "Veículos Alugados" deve incrementar após novo aluguel', () => {
     let before = 0;
     KPI.alugados().should(($el) => {
