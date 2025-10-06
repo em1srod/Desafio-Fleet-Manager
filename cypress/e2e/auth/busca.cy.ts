@@ -57,7 +57,8 @@ describe('Dashboard - Busca', () => {
     cy.get(`${CARD}:visible`).should('have.length', 1);
     cy.contains(CARD, placa).should('be.visible');
   });
-
+  //@rf-v-014  @bug BUG-CT-004
+  //https://github.com/em1srod/Desafio-Fleet-Manager/issues/4
   it('CT-004: Busca sem resultados deve exibir mensagem de vazio', () => {
     const termoInexistente = 'ZZZ9999';
 

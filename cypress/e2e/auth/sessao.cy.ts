@@ -1,26 +1,27 @@
 // cypress/e2e/auth/sessao.cy.ts
-import { DashboardPage } from '../../pages/DashboardPage';
-const dash = new DashboardPage();
 
-describe('CT-012 | Logout encerra sessão e redireciona', () => {
+// CT-012 — Guarda de rota: sem sessão não acessa /dashboard
+describe('CT-012 | Sessão - rota protegida sem sessão', () => {
   beforeEach(() => {
-    cy.visit('/login'); // garante que está na tela de login
-    cy.login('admin@teste.com', '123456');
-    cy.assertOnDashboard(); // novo helper
+    cy.clearCookies();
+    cy.clearLocalStorage();
+    cy.window().then(w => w.sessionStorage.clear());
   });
 
-  it('Deve encerrar sessão e redirecionar para /login', () => {
-    // aciona o logout
-    dash.sair().should('be.visible').click();
+  // @rf-lgn-202 @bug BUG-CT-012
+  //https://github.com/em1srod/Desafio-Fleet-Manager/issues/3
+  it('CT-012: ao acessar /dashboard sem sessão, deve redirecionar para /login', () => {
+    // Acessa diretamente a rota protegida SEM autenticar
+    cy.visit('/dashboard', { failOnStatusCode: false });
 
-    // "Redirecionando..." se existir
-    cy.get('body').then(($b) => {
+    // Oráculo único do requisito: terminar em /login
+    cy.location('pathname', { timeout: 6000 }).should('eq', '/login');
+
+    // (opcional) se quiser só logar no console caso apareça a tela intermediária
+    cy.get('body').then($b => {
       if ($b.text().match(/Redirecionando/i)) {
-        cy.contains(/Redirecionando/i, { timeout: 4000 }).should('be.visible');
+        cy.log('Tela transitória "Redirecionando..." exibida antes do /login');
       }
     });
-
-    // valida logout
-    cy.assertLoggedOut();
   });
 });
