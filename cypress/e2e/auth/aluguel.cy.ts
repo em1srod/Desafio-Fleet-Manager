@@ -72,7 +72,9 @@ describe('Dashboard - Aluguel e Regras de Status', () => {
       .filter(':visible')
       .should('have.length.greaterThan', 0);
   });
-
+  
+  //@rf-v-010 @bug BUG-CT-005
+  //https://github.com/em1srod/Desafio-Fleet-Manager/issues/7
   // CT-005: Alugar veículo Disponível altera KPI "Veículos Alugados" (1 -> 2)
 it('CT-005: Alugar veículo Disponível deve levar o KPI "Alugados" de 1 para 2', () => {
   const readInt = (s: string) => parseInt(s.replace(/[^\d]/g, ''), 10) || 0;
@@ -111,6 +113,7 @@ it('CT-005: Alugar veículo Disponível deve levar o KPI "Alugados" de 1 para 2'
     });
 
         // workaround BUG-PAG-001 (CTA fora da viewport)
+        //https://github.com/em1srod/Desafio-Fleet-Manager/issues/6
     cy.viewport(Cypress.config('viewportWidth') || 1366, 1100); // ou 1200 se precisar
     cy.get('[role=dialog], .modal, .v-overlay').filter(':visible').first().within(() => {
     cy.contains(/cartão de crédito|pix/i).first().click({ force: true });
