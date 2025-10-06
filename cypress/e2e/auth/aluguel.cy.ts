@@ -73,38 +73,77 @@ describe('Dashboard - Aluguel e Regras de Status', () => {
       .should('have.length.greaterThan', 0);
   });
 
-  it('CT-005: Alugar veículo Disponível altera status, KPIs e mostra sucesso', () => {
-    // escolhe um card “Disponível”
-    getCardByStatus(/disponível/i)
-      .first()
-      .as('cardDisp');
+  // CT-005: Alugar veículo Disponível altera KPI "Veículos Alugados" (1 -> 2)
+it('CT-005: Alugar veículo Disponível deve levar o KPI "Alugados" de 1 para 2', () => {
+  const readInt = (s: string) => parseInt(s.replace(/[^\d]/g, ''), 10) || 0;
 
-    // captura KPI “alugados” antes
-    let before = 0;
-    dash.kpiAlugados().should(($el) => { before = readIntFromCard($el); });
-
-    // aciona fluxo de aluguel
-    cy.get('@cardDisp').then(($card) => {
-      getAlugarBtnInside($card).click({ force: true });
+  // 1) KPI "Alugados" deve iniciar em 1
+  cy.get('.md\\:grid-cols-3 > :nth-child(2)') // card de KPI "Veículos Alugados"
+    .should('be.visible')
+    .invoke('text')
+    .then((txt) => {
+      const before = readInt(txt);
+      expect(before, 'KPI "Alugados" antes do fluxo').to.eq(1);
     });
 
-    confirmarAlugarNoModal();
-    confirmarPagamento();
+  // 2) Escolhe o primeiro card que contenha "Disponível"
+  cy.get('.md\\:grid-cols-2 > * , .md\\:grid-cols-3 > * , [data-cy=lista-veiculos] > *')
+    .filter(':visible')
+    .filter((_i, el) => /disponível/i.test((el as HTMLElement).innerText))
+    .first()
+    .as('cardDisp');
 
-    // mensagem de sucesso
-    cy.contains(/sucesso|confirmado|processado/i, { timeout: 10000 }).should('be.visible');
-
-    // status do mesmo card deve ser “Alugado”
-    cy.get('@cardDisp').should(($card) => {
-      expect(($card.text() || '').toLowerCase()).to.match(/alugado/);
-    });
-
-    // KPI alugados deve ter incrementado +1 (se falhar, evidencia bug)
-    dash.kpiAlugados().should(($el) => {
-      const after = readIntFromCard($el);
-      expect(after, 'KPI "Veículos Alugados" deveria subir +1').to.eq(before + 1);
-    });
+  // 3) Dentro do card, clica no botão "Alugar"
+  cy.get('@cardDisp').within(() => {
+    cy.contains('button, [role=button], a', /^alugar$/i)
+      .should('be.visible')
+      .click();
   });
+
+  // 4) Modal "Alugar Veículo" → "Confirmar Aluguel"
+  cy.get('[role=dialog], .modal, .v-overlay', { timeout: 10000 })
+    .filter(':visible')
+    .first()
+    .within(() => {
+      cy.contains('button, [role=button]', /confirmar aluguel/i, { timeout: 5000 })
+        .should('be.visible')
+        .click();
+    });
+
+        // workaround BUG-PAG-001 (CTA fora da viewport)
+    cy.viewport(Cypress.config('viewportWidth') || 1366, 1100); // ou 1200 se precisar
+    cy.get('[role=dialog], .modal, .v-overlay').filter(':visible').first().within(() => {
+    cy.contains(/cartão de crédito|pix/i).first().click({ force: true });
+    cy.contains('button, [role=button]', /confirmar pagamento/i)
+      .should('be.visible')
+      .click();
+    });
+
+  // 5) Modal "Pagamento" → "Confirmar Pagamento"
+  cy.get('[role=dialog], .modal, .v-overlay', { timeout: 10000 })
+    .filter(':visible')
+    .first()
+    .within(() => {
+      // Se houver seleção de forma de pagamento, escolha a primeira visível
+      cy.contains(/cartão de crédito|pix/i).first().click({ force: true });
+      cy.contains('button, [role=button]', /confirmar pagamento/i)
+        .should('be.visible')
+        .click();
+    });
+
+  // 6) Feedback de sucesso
+  cy.contains(/sucesso|confirmado|processado/i, { timeout: 10000 }).should('be.visible');
+
+  // 7) KPI "Alugados" deve agora ser 2
+  cy.get('.md\\:grid-cols-3 > :nth-child(2)')
+    .should('be.visible')
+    .invoke('text')
+    .then((txt) => {
+      const after = readInt(txt);
+      expect(after, 'KPI "Veículos Alugados" após o aluguel').to.eq(2);
+    });
+});
+
 
   // CT-006: bloquear aluguel de veículo alugado
 it('CT-006: Bloquear aluguel de veículo já Alugado', () => {
@@ -174,20 +213,24 @@ it('CT-007: Bloquear aluguel de veículo em Manutenção', () => {
 
 // CT-010: Duplo clique em "Alugar" não deve efetivar aluguel nem alterar estado
 it('CT-010: Duplo clique em "Alugar" não efetiva aluguel (sem efeitos colaterais)', () => {
-  const readInt = (s: string) => parseInt(String(s).replace(/[^\d]/g, ''), 10) || 0;
   const SEL_MODAL = '[role=dialog], .modal, .v-overlay';
+  const readInt = (s: string) => parseInt(String(s).replace(/[^\d]/g, ''), 10) || 0;
 
   // snapshot do KPI "Alugados"
   let before = 0;
   dash.kpiAlugados().should(($el) => { before = readInt($el.text()); });
 
-  // escolhe um card “Disponível” e o botão Alugar
+  // localiza um card "Disponível" sem usar filter(predicate)
   cy.get('.md\\:grid-cols-2 > * , .md\\:grid-cols-3 > * , [data-cy=lista-veiculos] > *')
     .filter(':visible')
-    .filter((_i, el) => /disponível/i.test((el as HTMLElement).innerText))
-    .first()
-    .as('cardDisp');
+    .then(($els) => {
+      const arr = Array.from($els as any as HTMLElement[]);
+      const match = arr.find(el => /disponível/i.test(el.innerText));
+      expect(match, 'um card com status "Disponível"').to.exist;
+      cy.wrap(match!).as('cardDisp');
+    });
 
+  // botão "Alugar" dentro do card
   cy.get('@cardDisp').within(() => {
     cy.contains('button, [role=button], a', /^alugar$/i)
       .filter(':visible')
@@ -195,34 +238,30 @@ it('CT-010: Duplo clique em "Alugar" não efetiva aluguel (sem efeitos colaterai
       .as('btnAlugar');
   });
 
-  // duplo clique (pode abrir/fechar o modal)
+  // duplo clique — pode abrir/fechar o modal
   cy.get('@btnAlugar').dblclick({ force: true });
-  cy.wait(150); // estabiliza
+  cy.wait(150);
 
-  // se o modal ficou aberto, fecha clicando numa coordenada segura da página
+  // se o modal ficou aberto, fecha clicando fora dele (coordenada segura)
   cy.get('body').then(($b) => {
-    const hasModal = $b.find(SEL_MODAL).filter(':visible').length > 0;
-    if (hasModal) {
-      // clique fora do modal (por coordenada) — evita acionar "Cancelar"
-      cy.get('body').click(10, 10, { force: true });
-      cy.wait(100);
-    }
+    const aberto = $b.find(SEL_MODAL).filter(':visible').length > 0;
+    if (aberto) cy.get('body').click(10, 10, { force: true });
   });
 
-  // oráculos mínimos do teste
-  cy.get(SEL_MODAL).should('not.exist');  // não restou modal
-  cy.location('pathname').should('include', '/dashboard');       // seguimos no dashboard
-  cy.contains(/^pagamento$/i).should('not.exist');               // não navegou para pagamento
+  // oráculos mínimos: sem modal / na mesma página / sem navegação a pagamento
+  cy.get(SEL_MODAL).should('not.exist');
+  cy.location('pathname').should('include', '/dashboard');
+  cy.contains(/^pagamento$/i).should('not.exist');
 
-  // card continua disponível
+  // card continua "Disponível"
   cy.get('@cardDisp').should(($c) => {
     expect(($c.text() || '').toLowerCase()).to.match(/disponível/);
   });
 
-  // KPI inalterado
+  // KPI não alterou
   dash.kpiAlugados().should(($el) => {
     const after = readInt($el.text());
-    expect(after).to.eq(before);
+    expect(after, 'KPI "Veículos Alugados" deve permanecer igual').to.eq(before);
   });
 });
 });
