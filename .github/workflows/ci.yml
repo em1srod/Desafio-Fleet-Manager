@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run Cypress headless
+        run: npx cypress run
+
+      - name: Generate HTML reports (custom)
+        run: |
+          if npm run | grep -q "generationreport"; then
+            npm run generationreport
+          else
+            echo "No generationreport script found — skipping."
+          fi
+
+      - name: Upload artifacts (reports/videos/screenshots)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-artifacts
+          path: |
+            cypress/reports/**
+            cypress/screenshots/**
+            cypress/videos/**
+          if-no-files-found: ignore
