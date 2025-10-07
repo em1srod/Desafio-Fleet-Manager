@@ -1,15 +1,11 @@
-name: E2E Login (Cypress)
-
+name: CI
 on:
   push:
-    branches: [ main, master, develop, feature/** ]
   pull_request:
-    branches: [ main, master, develop ]
 
 jobs:
-  cypress-run:
+  e2e:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,37 +13,32 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci || npm install
+      - name: Install deps
+        run: npm ci
 
-      - name: Run Cypress tests (headless)
-        run: npm run cy:run
-
-      - name: Generate Mochawesome HTML report
-        run: npm run report
-
-      - name: Upload Mochawesome HTML report
-        uses: actions/upload-artifact@v4
+      - name: Run Cypress (headless)
+        uses: cypress-io/github-action@v6
         with:
-          name: mochawesome-report
-          path: reports/html
-          if-no-files-found: error
+          command: npx cypress run --browser electron
 
-      - name: Upload Cypress screenshots (on failures)
+      - name: Generate HTML reports (optional)
+        run: |
+          if npm run | grep -q "generationreport"; then
+            npm run generationreport
+          else
+            echo "No generationreport script found — skipping."
+          fi
+
+      - name: Upload artifacts (reports/videos/screenshots)
+        uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: cypress-screenshots
-          path: cypress/screenshots
-          if-no-files-found: ignore
-
-      - name: Upload Cypress videos
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-videos
-          path: cypress/videos
+          name: cypress-artifacts
+          path: |
+            cypress/reports/**
+            cypress/screenshots/**
+            cypress/videos/**
           if-no-files-found: ignore
